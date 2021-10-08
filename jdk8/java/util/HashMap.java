@@ -566,8 +566,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final Node<K,V> getNode(int hash, Object key) {
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+        // mark: 数组不为空, 并且key定位到数组对应位置的节点不为null, 才遍历查询
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (first = tab[(n - 1) & hash]) != null) {
+            // mark: 为什么总是判断第一个节点呢? 概率问题(第一节点在大多数情况下都是匹配的)?
             if (first.hash == hash && // always check first node
                 ((k = first.key) == key || (key != null && key.equals(k))))
                 return first;
@@ -625,20 +627,27 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
         Node<K,V>[] tab; Node<K,V> p; int n, i;
+        // mark: 数组是空, 或者长度为0, 先做一次扩容(初始化)
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
+        // mark: 根据key的hash值定位数据的下标, 如果数组下标对应的位置一个元素都不存在, 直接插入到第一个位置
         if ((p = tab[i = (n - 1) & hash]) == null)
             tab[i] = newNode(hash, key, value, null);
+        // mark: 尝试找相同的key, 找到之后标记一下就break(后面根据onlyIfAbsent和oldValue是否为null判断是否需要覆盖旧的值)
+        // mark: 找不到的话就插入一个新的节点
         else {
             Node<K,V> e; K k;
+            // mark: 判断第一个节点的key是否匹配
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
                 e = p;
             else if (p instanceof TreeNode)
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
             else {
+                // mark: binCount用于记录链表的长度, 方便判断是否转为红黑树
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
+                        // mark: 如果遍历到最后一个结点了, 直接进行尾插法
                         p.next = newNode(hash, key, value, null);
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
@@ -650,6 +659,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     p = e;
                 }
             }
+            // mark: e != null 表示找到了相同的key值, 执行替换逻辑, 不需要判断扩容
             if (e != null) { // existing mapping for key
                 V oldValue = e.value;
                 if (!onlyIfAbsent || oldValue == null)
@@ -754,6 +764,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
+        // mark: 链表节点个数>=8是调用treeifyBin的时机, 至于是转为二叉树还是执行扩容, 还要结合数组的长度做判断
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
             resize();
         else if ((e = tab[index = (n - 1) & hash]) != null) {
@@ -1776,6 +1787,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     // Callbacks to allow LinkedHashMap post-actions
+    // mark: 给LinkedHashMap继承的一些后置处理方法
     void afterNodeAccess(Node<K,V> p) { }
     void afterNodeInsertion(boolean evict) { }
     void afterNodeRemoval(Node<K,V> p) { }
@@ -1857,20 +1869,26 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             do {
                 int ph, dir; K pk;
                 TreeNode<K,V> pl = p.left, pr = p.right, q;
+                // mark: 走左树
                 if ((ph = p.hash) > h)
                     p = pl;
+                // mark: 走右树
                 else if (ph < h)
                     p = pr;
+                // mark: hash值相等了, 开始比较key是否相同
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))
                     return p;
+                // mark: hash值相等, key不相同, 丢弃是null的左子树或者右子树
                 else if (pl == null)
                     p = pr;
                 else if (pr == null)
                     p = pl;
+                // mark: hash值相等, key不相同, 看看是否可以通过Key的比较器Comparable选择继续在左子树还是右子树继续查询
                 else if ((kc != null ||
                           (kc = comparableClassFor(k)) != null) &&
                          (dir = compareComparables(kc, k, pk)) != 0)
                     p = (dir < 0) ? pl : pr;
+                // mark: 尝试先在右子树查找相同的key, 如果找到就直接返回, 如果找不到从左子树找
                 else if ((q = pr.find(h, k, kc)) != null)
                     return q;
                 else
