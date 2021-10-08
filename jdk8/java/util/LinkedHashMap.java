@@ -190,6 +190,7 @@ public class LinkedHashMap<K,V>
      * HashMap.Node subclass for normal LinkedHashMap entries.
      */
     static class Entry<K,V> extends HashMap.Node<K,V> {
+        // mark: 节点内新增before, after两个指针, 用于保存顺序
         Entry<K,V> before, after;
         Entry(int hash, K key, V value, Node<K,V> next) {
             super(hash, key, value, next);
