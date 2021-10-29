@@ -415,6 +415,7 @@ class Thread implements Runnable {
                 acc != null ? acc : AccessController.getContext();
         this.target = target;
         setPriority(priority);
+        // mark: 继承来自父类的ThradLocalMap
         if (inheritThreadLocals && parent.inheritableThreadLocals != null)
             this.inheritableThreadLocals =
                 ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
@@ -704,12 +705,14 @@ class Thread implements Runnable {
          *
          * A zero status value corresponds to state "NEW".
          */
+        // mark: 检查线程状态, 如果多次调用线程的start方法会抛出IllegalThreadStateException
         if (threadStatus != 0)
             throw new IllegalThreadStateException();
 
         /* Notify the group that this thread is about to be started
          * so that it can be added to the group's list of threads
          * and the group's unstarted count can be decremented. */
+        // mark: 放入线程组一个Thread数组里面, nthreads数 + 1, unstarted数-1
         group.add(this);
 
         boolean started = false;
@@ -718,6 +721,7 @@ class Thread implements Runnable {
             started = true;
         } finally {
             try {
+                // mark: 如果启动失败, 把线程从线程组的线程数组中移除, unstarted数 + 1
                 if (!started) {
                     group.threadStartFailed(this);
                 }
@@ -744,6 +748,7 @@ class Thread implements Runnable {
      */
     @Override
     public void run() {
+        // mark: 如果当前线程target(Runnable)有被赋值, 就调用Runnable对象的run方法
         if (target != null) {
             target.run();
         }
@@ -1028,6 +1033,7 @@ class Thread implements Runnable {
      */
     @Deprecated
     public final void suspend() {
+        // mark: suspend方法不要求一直在synchronized范围内才可以调用; 在调用suspend方法之后不会释放线程已经占用的锁
         checkAccess();
         suspend0();
     }
@@ -1054,6 +1060,7 @@ class Thread implements Runnable {
      */
     @Deprecated
     public final void resume() {
+        // mark: 和suspend搭配使用, 恢复被挂起的线程
         checkAccess();
         resume0();
     }
@@ -1085,10 +1092,12 @@ class Thread implements Runnable {
     public final void setPriority(int newPriority) {
         ThreadGroup g;
         checkAccess();
+        // mark: 线程优先级在1-10之间
         if (newPriority > MAX_PRIORITY || newPriority < MIN_PRIORITY) {
             throw new IllegalArgumentException();
         }
         if((g = getThreadGroup()) != null) {
+            // mark: 优先级不能大于线程组的最大优先级
             if (newPriority > g.getMaxPriority()) {
                 newPriority = g.getMaxPriority();
             }
@@ -1200,6 +1209,7 @@ class Thread implements Runnable {
      *          the current thread cannot access its thread group
      */
     public static int enumerate(Thread tarray[]) {
+        // mark: 复制线程组内的线程到传入的数组中(不知道干啥用的)
         return currentThread().getThreadGroup().enumerate(tarray);
     }
 
@@ -1240,6 +1250,9 @@ class Thread implements Runnable {
      */
     public final synchronized void join(long millis)
     throws InterruptedException {
+        // mark: join方法有3个重载, 最终都会调用到这里, 线程A调用了线程B的join方法,
+        // 线程A会阻塞, 一直等到线程B执行完成, 或者超过指定的等待时间结束后线程A才可以继续执行,
+        // 如果线程自己调用自己的join方法, 会无法正常结束线程, 进入类似死循环的状态
         long base = System.currentTimeMillis();
         long now = 0;
 
@@ -1252,6 +1265,7 @@ class Thread implements Runnable {
                 wait(0);
             }
         } else {
+            // mark: 这个延迟算法设计得不错
             while (isAlive()) {
                 long delay = millis - now;
                 if (delay <= 0) {
