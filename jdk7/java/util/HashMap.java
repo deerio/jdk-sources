@@ -470,6 +470,7 @@ public class HashMap<K,V>
             return putForNullKey(value);
         int hash = hash(key);
         int i = indexFor(hash, table.length);
+        // mark: 先尝试找相同的key, 如果找到的话覆盖新的value进去
         for (Entry<K,V> e = table[i]; e != null; e = e.next) {
             Object k;
             if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
@@ -551,6 +552,7 @@ public class HashMap<K,V>
     void resize(int newCapacity) {
         Entry[] oldTable = table;
         int oldCapacity = oldTable.length;
+        // mark: 扩容前的数组大小如果已经达到最大值了, 把阈值设置为Integer的最大值, 避免下次再触发扩容动作
         if (oldCapacity == MAXIMUM_CAPACITY) {
             threshold = Integer.MAX_VALUE;
             return;
@@ -560,9 +562,12 @@ public class HashMap<K,V>
         boolean oldAltHashing = useAltHashing;
         useAltHashing |= sun.misc.VM.isBooted() &&
                 (newCapacity >= Holder.ALTERNATIVE_HASHING_THRESHOLD);
+        // mark: 这个rehash怎么计算出来的?
         boolean rehash = oldAltHashing ^ useAltHashing;
+        // mark: 把旧数据迁移到新数组
         transfer(newTable, rehash);
         table = newTable;
+        // mark: 扩容之后重新计算阈值
         threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);
     }
 
@@ -577,7 +582,9 @@ public class HashMap<K,V>
                 if (rehash) {
                     e.hash = null == e.key ? 0 : hash(e.key);
                 }
+                // mark: 每次都要根据hash重新计算一下key在新数组的位置
                 int i = indexFor(e.hash, newCapacity);
+                // mark: 头插法插入元素
                 e.next = newTable[i];
                 newTable[i] = e;
                 e = next;
@@ -847,6 +854,7 @@ public class HashMap<K,V>
      * Subclass overrides this to alter the behavior of put method.
      */
     void addEntry(int hash, K key, V value, int bucketIndex) {
+        // mark: 先判断要不要扩容, 然后才是进行插入
         if ((size >= threshold) && (null != table[bucketIndex])) {
             resize(2 * table.length);
             hash = (null != key) ? hash(key) : 0;
@@ -866,6 +874,7 @@ public class HashMap<K,V>
      */
     void createEntry(int hash, K key, V value, int bucketIndex) {
         Entry<K,V> e = table[bucketIndex];
+        // mark: 直接就是头插法了
         table[bucketIndex] = new Entry<>(hash, key, value, e);
         size++;
     }
