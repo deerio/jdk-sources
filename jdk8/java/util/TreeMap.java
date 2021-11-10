@@ -545,6 +545,7 @@ public class TreeMap<K,V>
         int cmp;
         Entry<K,V> parent;
         // split comparator and comparable paths
+        // mark: 优先使用构造器传入的比较器, 如果没有传比较器, 会直接把Key强转为Comparable(ClassCastException)
         Comparator<? super K> cpr = comparator;
         if (cpr != null) {
             do {
