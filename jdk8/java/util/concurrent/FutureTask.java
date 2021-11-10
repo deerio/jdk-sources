@@ -115,10 +115,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
     @SuppressWarnings("unchecked")
     private V report(int s) throws ExecutionException {
         Object x = outcome;
+        // mark: 正常完成
         if (s == NORMAL)
             return (V)x;
+        // mark: 任务被取消/中断ing/已中断, 抛出CancellationException
         if (s >= CANCELLED)
             throw new CancellationException();
+        // mark: 其他情况, 也就是剩下EXCEPTIONAL了, 取outcome的异常出来放入ExecutionException里面
         throw new ExecutionException((Throwable)x);
     }
 
@@ -263,14 +266,18 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 V result;
                 boolean ran;
                 try {
+                    // mark: 如果异常在内层被捕获, 其实有异常和没有异常是一样的, 都不会走到下面的catch语句块内执行setException
                     result = c.call();
                     ran = true;
                 } catch (Throwable ex) {
+                    // mark: 如果异常没有被捕获, 就进入到这里了
                     result = null;
                     ran = false;
+                    // mark: 把state设置为EXCEPTIONAL, 把ex(异常)赋值给outcome
                     setException(ex);
                 }
                 if (ran)
+                    // mark: 把state设置为NORMAL, outcome设置为结果的返回值
                     set(result);
             }
         } finally {

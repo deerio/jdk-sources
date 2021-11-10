@@ -1146,6 +1146,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     beforeExecute(wt, task);
                     Throwable thrown = null;
                     try {
+                        // mark: 多态, task有可能是Runnable, 也有可能是Runnable的子类FutureTask
                         task.run();
                     } catch (RuntimeException x) {
                         thrown = x; throw x;

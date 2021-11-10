@@ -145,6 +145,10 @@ public interface ExecutorService extends Executor {
      * complete execution.  Use {@link #awaitTermination awaitTermination}
      * to do that.
      *
+     * <br><br/>
+     * 翻译一下: 启动一个有序的停止, 调用之后不会执行新的任务, 之前的提交的任务会被执行, 但是不会等到这些任务执行完再关闭,
+     * 如果需要等待一段时间之后再关闭线程池, 可以先调用awaitTermination方法
+     *
      * @throws SecurityException if a security manager exists and
      *         shutting down this ExecutorService may manipulate
      *         threads that the caller is not permitted to modify

@@ -503,6 +503,7 @@ public class Executors {
     static final class RunnableAdapter<T> implements Callable<T> {
         final Runnable task;
         final T result;
+        // mark: 把Runnable转成Callable, 重写call方法
         RunnableAdapter(Runnable task, T result) {
             this.task = task;
             this.result = result;
