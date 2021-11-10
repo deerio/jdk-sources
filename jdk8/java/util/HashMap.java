@@ -690,10 +690,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         int oldThr = threshold;
         int newCap, newThr = 0;
         if (oldCap > 0) {
+            // mark: 这里跟1.7的逻辑是一样的, 如果容量超额了, 把阈值设到最大避免再次进入扩容方法
             if (oldCap >= MAXIMUM_CAPACITY) {
                 threshold = Integer.MAX_VALUE;
                 return oldTab;
             }
+            // mark: 不超过最大值的话, 按两倍扩容
             else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
@@ -718,6 +720,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> e;
                 if ((e = oldTab[j]) != null) {
                     oldTab[j] = null;
+                    // mark: 数组位置上只有一个元素
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
                     else if (e instanceof TreeNode)
@@ -728,6 +731,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                         Node<K,V> next;
                         do {
                             next = e.next;
+                            // mark: 高低位的特性, 注意是跟旧容量的值做与运算
                             if ((e.hash & oldCap) == 0) {
                                 if (loTail == null)
                                     loHead = e;
@@ -743,6 +747,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                                 hiTail = e;
                             }
                         } while ((e = next) != null);
+                        // mark: 处理高低位的指针, 头指针放入数组对应的桶位, 尾指针.next处理为null
                         if (loTail != null) {
                             loTail.next = null;
                             newTab[j] = loHead;
@@ -2176,6 +2181,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             }
 
             if (loHead != null) {
+                // mark: <= 6 个结点由红黑树转化为链表
                 if (lc <= UNTREEIFY_THRESHOLD)
                     tab[index] = loHead.untreeify(map);
                 else {
