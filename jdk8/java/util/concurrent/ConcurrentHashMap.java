@@ -1011,17 +1011,22 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         if (key == null || value == null) throw new NullPointerException();
         int hash = spread(key.hashCode());
         int binCount = 0;
+        // mark: 死循环, 直到插入成功才break;
         for (Node<K,V>[] tab = table;;) {
             Node<K,V> f; int n, i, fh;
+            // mark: 初次插入, 先初始化数组
             if (tab == null || (n = tab.length) == 0)
                 tab = initTable();
+            // mark: 如果key对应在数组的位置是null, 尝试cas插入
             else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
                 if (casTabAt(tab, i, null,
                              new Node<K,V>(hash, key, value, null)))
                     break;                   // no lock when adding to empty bin
             }
+            // mark: 如果是正在扩容, 当前线程先去协助完成扩容流程
             else if ((fh = f.hash) == MOVED)
                 tab = helpTransfer(tab, f);
+            // mark: 如果不是以上的情况, 就synchronized锁住头结点进行插入
             else {
                 V oldVal = null;
                 synchronized (f) {
