@@ -144,8 +144,9 @@ class Thread implements Runnable {
     static {
         registerNatives();
     }
-
+    // mark: 线程名
     private volatile String name;
+    // mark: 优先级
     private int            priority;
     private Thread         threadQ;
     private long           eetop;
@@ -153,15 +154,18 @@ class Thread implements Runnable {
     /* Whether or not to single_step this thread. */
     private boolean     single_step;
 
+    // mark: 是否是守护线程
     /* Whether or not the thread is a daemon thread. */
     private boolean     daemon = false;
 
     /* JVM state */
     private boolean     stillborn = false;
 
+    // mark: 线程运行的目标对象
     /* What will be run. */
     private Runnable target;
 
+    // mark: 线程所在的线程组
     /* The group of this thread */
     private ThreadGroup group;
 
@@ -171,12 +175,14 @@ class Thread implements Runnable {
     /* The inherited AccessControlContext of this thread */
     private AccessControlContext inheritedAccessControlContext;
 
+    // mark: 默认的编号, 在给线程默命名的时候会用这个数字作为线程名的后缀
     /* For autonumbering anonymous threads. */
     private static int threadInitNumber;
     private static synchronized int nextThreadNum() {
         return threadInitNumber++;
     }
 
+    // mark: ThreadLocal相关的引用
     /* ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
     ThreadLocal.ThreadLocalMap threadLocals = null;
@@ -187,6 +193,7 @@ class Thread implements Runnable {
      */
     ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
 
+    // 线程栈内存大小
     /*
      * The requested stack size for this thread, or 0 if the creator did
      * not specify a stack size.  It is up to the VM to do whatever it
@@ -370,7 +377,7 @@ class Thread implements Runnable {
         }
 
         this.name = name;
-
+        // mark: 负责创建当前线程的线程就是当前线程的父线程
         Thread parent = currentThread();
         SecurityManager security = System.getSecurityManager();
         if (g == null) {
@@ -405,6 +412,7 @@ class Thread implements Runnable {
         g.addUnstarted();
 
         this.group = g;
+        // mark: 如果父线程是守护线程, 由父线程创建出来的线程也是守护线程
         this.daemon = parent.isDaemon();
         this.priority = parent.getPriority();
         if (security == null || isCCLOverridden(parent.getClass()))
