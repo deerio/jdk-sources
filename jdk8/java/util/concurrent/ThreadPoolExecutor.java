@@ -1555,9 +1555,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         if (corePoolSize < 0)
             throw new IllegalArgumentException();
         int delta = corePoolSize - this.corePoolSize;
+        // mark: 赋值
         this.corePoolSize = corePoolSize;
+        // mark: 如果当前的线程数>新的核心线程数, 执行中断空闲的线程
         if (workerCountOf(ctl.get()) > corePoolSize)
             interruptIdleWorkers();
+        // mark: 如果新的核心线程数>旧的核心线程数, 再判断一下队列的是否有待执行的任务, 有的话就创建线程去执行
         else if (delta > 0) {
             // We don't really know how many new threads are "needed".
             // As a heuristic, prestart enough new workers (up to new
@@ -1677,9 +1680,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @see #getMaximumPoolSize
      */
     public void setMaximumPoolSize(int maximumPoolSize) {
+        // mark: 新的最大线程数不能小于核心线程数
         if (maximumPoolSize <= 0 || maximumPoolSize < corePoolSize)
             throw new IllegalArgumentException();
+        // mark: 赋值
         this.maximumPoolSize = maximumPoolSize;
+        // mark: 如果新的最大线程数比当前线程数小, 执行一下中断空闲的线程
         if (workerCountOf(ctl.get()) > maximumPoolSize)
             interruptIdleWorkers();
     }
